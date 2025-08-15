@@ -1,4 +1,4 @@
-name: Deploy Terraform Infrastructure
+name: Deploy Terraform
 
 on:
   workflow_dispatch:
@@ -16,7 +16,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: ${{inputs.environment}}
-    permissions: write-all
+    permissions:
+      id-token: write
+      contents: read
     defaults:
       run:
         working-directory: terraform
