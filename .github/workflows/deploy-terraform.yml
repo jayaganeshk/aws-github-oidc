@@ -15,7 +15,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{env.environment}}
+    environment: ${{inputs.environment}}
     permissions: write-all
     defaults:
       run:
