@@ -19,6 +19,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      issues: write
     defaults:
       run:
         working-directory: terraform
