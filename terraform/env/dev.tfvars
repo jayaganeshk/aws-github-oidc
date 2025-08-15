@@ -1,5 +1,2 @@
-environment      = "dev"
-
-tags = {
-  Owner = "github-actions"
-}
+environment       = "dev"
+environmentSuffix = "dev"
