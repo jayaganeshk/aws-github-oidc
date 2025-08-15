@@ -1,0 +1,60 @@
+name: Deploy Terraform Infrastructure (Manual Approval Action)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy"
+        type: choice
+        options: [dev, test, prod]
+        default: dev
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - name: 1. Checkout code
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: 3. Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: 4. Initialize Terraform
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_BACKEND_BUCKET }}" \
+            -backend-config="key=state/github-oidc/${{ inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ vars.AWS_REGION }}"
+
+      - name: 5. Validate Terraform configuration
+        run: terraform validate
+
+      - name: 6. Generate Terraform plan
+        run: terraform plan -var-file="env/${{ inputs.environment }}.tfvars" -var="aws_region=${{ vars.AWS_REGION }}" -out=tfplan
+
+      - name: 7. Manual approval required
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: ${{ github.actor }}
+          minimum-approvals: 1
+          issue-title: "Deploying to ${{ inputs.environment }} environment"
+          issue-body: "Please review the Terraform plan and approve this deployment to ${{ inputs.environment }}."
+
+      - name: 8. Apply Terraform changes
+        run: terraform apply tfplan
