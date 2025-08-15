@@ -1,4 +1,4 @@
-name: Deploy Terraform Infrastructure (Manual Approval Action)
+name: Deploy Terraform Infrastructure
 
 on:
   workflow_dispatch:
@@ -12,6 +12,9 @@ on:
 permissions:
   id-token: write
   contents: read
+
+env:
+  environment: ${{inputs.environment}}
 
 jobs:
   deploy:
